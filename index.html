@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoreo Ambiental – CHPT-W3Y</title>
+  
+    <!--
+    ============================================================
+    FUENTES EXTERNAS (Google Fonts)
+    - Outfit: fuente principal de la interfaz (pesos 300–900)
+    - Space Mono: fuente monoespaciada para valores numéricos
+    ============================================================
+    -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============================================================
+     CONTENEDOR RAÍZ
+     Envuelve toda la aplicación; permite centrado y layout global
+     ============================================================ -->
+<div class="app">
+
+    <!-- ──────────────────────────────────────────────────────────
+       BARRA DE TÍTULO / ENCABEZADO
+       Muestra el logotipo y el nombre del sistema (CHPT-W3Y)
+       ────────────────────────────────────────────────────────── -->
+  <header class="title-bar">
+    <div class="logo"></div> <!-- Logotipo (definido vía CSS) -->
+    <span class="brand">POWERED BY CHPT-W3Y</span> <!-- Identificador del sistema   -->
+  </header>
+
+  <!-- ============================================================
+       ÁREA PRINCIPAL DEL DASHBOARD
+       ============================================================ -->
+  <main class="dashboard">
+
+    <!-- ──────────────────────────────────────────────────────────
+         FILA SUPERIOR DE TARJETAS (top-grid)
+         Grid de 4 columnas con las métricas principales
+         ────────────────────────────────────────────────────────── -->
+    <div class="top-grid">
+
+        <!-- ╔══════════════════════════════╗
+           ║  TARJETA: TEMPERATURA        ║
+           ║  Sensor: DHT22               ║
+           ╚══════════════════════════════╝ -->
+      <div class="card temp-card">
+        <div class="card-label">Temperatura</div>
+
+                <!-- Valor principal + icono de tendencia -->
+
+        <div>
+          <div class="temp-main">
+            <span class="temp-value">26.5°C</span>
+
+                        <!-- Flecha SVG que indica tendencia ascendente -->
+            <svg class="temp-arrow-classic" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 5.828V22h-2V5.828L4.929 11.9l-1.414-1.414L12 2l8.485 8.485-1.414 1.414L13 5.828z"/>
+            </svg>
+          </div>
+
+                    <!-- Temperatura de sensación térmica calculada -->
+          <div class="temp-sensation">Sensación &nbsp;28.0°C</div>
+        </div>
+
+                <!-- Estadísticas del período: mínimo, promedio, máximo -->
+        <div>
+          <div class="card-sep"></div>
+          <div class="stats-row">
+            <div class="stat-col">
+              <div class="s-label">Mínimo</div>
+              <div class="s-value">25.5°C</div>
+            </div>
+            <div class="stat-col">
+              <div class="s-label">Promedio</div>
+              <div class="s-value">25.9°C</div>
+            </div>
+            <div class="stat-col">
+              <div class="s-label">Máximo</div>
+              <div class="s-value">26.5°C</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ╔══════════════════════════════╗
+           ║  TARJETA: HUMEDAD RELATIVA   ║
+           ║  Sensor: DHT22               ║
+           ╚══════════════════════════════╝ -->
+      <div class="card hum-card">
+        <div class="card-label">Humedad</div>
+
+        <!-- Valor actual + barra de progreso -->
+        <div>
+          <div class="hum-value">47%</div>
+          <div class="progress-track">
+
+                        <!-- La anchura de este div se anima vía script.js con el ID "humBar" -->
+            <div class="progress-fill-hum" id="humBar"></div>
+          </div>
+        </div>
+        <div>
+
+                    <!-- Estadísticas del período -->
+          <div class="card-sep-dark"></div>
+          <div class="stats-row dark">
+            <div class="stat-col">
+              <div class="s-label">Mínimo</div>
+              <div class="s-value">24.9%</div>
+            </div>
+            <div class="stat-col">
+              <div class="s-label">Promedio</div>
+              <div class="s-value">20.9%</div>
+            </div>
+            <div class="stat-col">
+              <div class="s-label">Máximo</div>
+              <div class="s-value">20.9%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ╔══════════════════════════════╗
+           ║  TARJETA: ORIGEN DE          ║
+           ║  CONTAMINACIÓN               ║
+           ║  Inferido desde PMS5003      ║
+           ╚══════════════════════════════╝
+           Clasifica la fuente probable de partículas en suspensión
+           basándose en el perfil de PM1.0, PM2.5 y PM10          -->
+      <div class="card cont-card">
+        <div class="card-label">Origen De<br>Contaminación</div>
+        <div class="car-emoji">🚗</div>
+        <div class="cont-label">Vehicular</div>
+      </div>
+
+       <!-- ╔══════════════════════════════╗
+           ║  TARJETA: ESTADO GENERAL     ║
+           ║  Resumen global del sistema  ║
+           ╚══════════════════════════════╝
+           Estado calculado combinando temperatura, humedad
+           y niveles de material particulado (PM).
+           Posibles valores: Normal / Precaución / Peligro        -->
+      <div class="card status-card">
+        <div class="card-label">Estado</div>
+        <div class="shield-wrap">
+          <span class="shield-icon">🛡️</span> <!-- Ícono dinámico según estado -->
+        </div>
+        <div class="status-label">Normal</div>
+      </div>
+
+
+       <!-- ──────────────────────────────────────────────────────────
+         FILA INFERIOR DE TARJETAS (bottom-grid)
+         Dos columnas: historial temporal + detalle calidad del aire
+         ────────────────────────────────────────────────────────── -->
+    </div><div class="bottom-grid">
+
+        <!-- ╔══════════════════════════════════════════════════════╗
+           ║  TARJETA: HISTORIAL (Gráfica de líneas)             ║
+           ╚══════════════════════════════════════════════════════╝
+           Muestra la evolución temporal de cualquier métrica.
+           La gráfica se dibuja sobre <canvas> usando script.js  -->
+      <div class="card hist-card">
+        <div class="card-label">Historial</div>
+
+                <!-- Controles de la gráfica -->
+        <div class="hist-header">
+
+                      <!-- Pestañas para seleccionar la métrica a graficar -->
+          <div class="tabs">
+            <button class="tab-btn active" data-metric="temp">Temperatura</button>
+            <button class="tab-btn" data-metric="hum">Humedad</button>
+            <button class="tab-btn" data-metric="pm1">PM1.0</button>
+            <button class="tab-btn" data-metric="pm25">PM2.5</button>
+            <button class="tab-btn" data-metric="pm10">PM10</button>
+          </div>
+
+                    <!-- Selector de rango de tiempo -->
+          <div class="rango-row">
+            <span class="rango-label">Rango:</span>
+            <div class="rango-select-wrap">
+
+                <!--
+                Al cambiar este select, script.js filtra los datos
+                históricos y redibuja el canvas correspondiente
+              -->
+              <select class="rango-select" id="rangoSelect">
+                <option value="1h">Última Hora</option>
+                <option value="3h">Últimas 3 Horas</option>
+                <option value="6h">Últimas 6 Horas</option>
+              </select>
+              <div class="rango-indicator"></div>
+            </div>
+          </div>
+        </div>
+
+                <!-- Canvas donde script.js renderiza la gráfica de líneas -->
+        <div class="chart-wrap">
+          <canvas id="histCanvas"></canvas>
+        </div>
+      </div>
+
+
+       <!-- ╔══════════════════════════════════════════════════════╗
+           ║  TARJETA: CALIDAD DEL AIRE                          ║
+           ║  Sensor: PMS5003                                    ║
+           ╚══════════════════════════════════════════════════════╝
+           Muestra el índice global de calidad (donut) y el
+           desglose por tamaño de partícula (PM1.0, PM2.5, PM10) -->
+      <div class="card air-card">
+        <div class="card-label" style="align-self:flex-start; margin-bottom: 10px;">Calidad del Aire</div>
+        
+
+                <!-- ── Gráfica de dona (índice AQI resumido) ── -->
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+
+                              <!-- Degradado naranja-rojo para la sección activa del arco -->
+              <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF8C00"/>
+                <stop offset="100%" stop-color="#E63A00"/>
+              </linearGradient>
+            </defs>
+
+            <!--
+              Arco de progreso activo.
+              stroke-dasharray controla qué porción del círculo se pinta:
+                · "490 1000" → ~47% del arco visible (circunferencia ≈ 490px)
+              stroke-dashoffset desplaza el inicio del arco para centrarlo.
+              script.js puede actualizar estos valores dinámicamente
+              mediante el ID "donutArc".
+              La transición CSS da la animación suave al cambiar valores.
+            -->
+            <circle cx="100" cy="100" r="78" fill="none" stroke="#141E38" stroke-width="22"/>
+            <circle cx="100" cy="100" r="78" fill="none" stroke="url(#donutGrad)" stroke-width="22" stroke-linecap="round" stroke-dasharray="490 1000" stroke-dashoffset="122" id="donutArc" style="transition: stroke-dasharray 1s ease;"/>
+          </svg>
+
+                    <!-- Porcentaje centrado dentro de la dona -->
+          <div class="donut-center">
+            <div class="donut-pct">47%</div>
+          </div>
+        </div>
+
+
+                <!-- ── Lista de partículas PM con barra de progreso individual ── -->
+        <div class="pm-list">
+
+            <!--
+            Cada pm-item contiene:
+              · pm-dot   → indicador de color según estado
+              · pm-name  → categoría de partícula
+              · pm-val   → concentración en µg/m³
+              · pm-status → etiqueta de calidad (Bueno / Decente / Malo)
+              · pm-track / pm-fill → barra animada (ancho inicial 0%,
+                el atributo data-w define el objetivo; script.js lo anima)
+          -->
+
+
+                    <!-- PM 1.0 — partículas ≤ 1 µm (las más finas) -->
+          <div class="pm-item">
+            <div class="pm-header">
+              <div class="pm-dot" style="background:#3DD17A;"></div>
+              <span class="pm-name">PM 1.0</span>
+              <span class="pm-val">12 µg/m³</span>
+              <span class="pm-spacer"></span>
+              <span class="pm-status" style="color:#3DD17A;">Bueno</span>
+            </div>
+            <div class="pm-track">
+              <div class="pm-fill" style="width:0%; background:linear-gradient(90deg,#28A860,#3DD17A);" data-w="24%"></div>
+            </div>
+          </div>
+
+
+                    <!-- PM 2.5 — partículas ≤ 2.5 µm (inhalables finas) -->
+          <div class="pm-item">
+            <div class="pm-header">
+              <div class="pm-dot" style="background:#FFC83C;"></div>
+              <span class="pm-name">PM 2.5</span>
+              <span class="pm-val">28 µg/m³</span>
+              <span class="pm-spacer"></span>
+              <span class="pm-status" style="color:#FFC83C;">Decente</span>
+            </div>
+            <div class="pm-track">
+              <div class="pm-fill" style="width:0%; background:linear-gradient(90deg,#CC8800,#FFC83C);" data-w="56%"></div>
+            </div>
+          </div>
+
+
+                    <!-- PM 10 — partículas ≤ 10 µm (inhalables gruesas) -->
+          <div class="pm-item">
+            <div class="pm-header">
+              <div class="pm-dot" style="background:#FF4B4B;"></div>
+              <span class="pm-name">PM 10</span>
+              <span class="pm-val">75 µg/m³</span>
+              <span class="pm-spacer"></span>
+              <span class="pm-status" style="color:#FF4B4B;">Malo</span>
+            </div>
+            <div class="pm-track">
+              <div class="pm-fill" style="width:0%; background:linear-gradient(90deg,#CC1010,#FF4B4B);" data-w="75%"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div></main>
+</div>
+
+
+<!--
+  ================================================================
+  SCRIPT PRINCIPAL
+  Responsabilidades de script.js:
+    · Animar barras de progreso (humedad y PM) al cargar la página
+    · Dibujar y actualizar la gráfica de historial en #histCanvas
+    · Manejar los eventos de las pestañas (.tab-btn) y #rangoSelect
+    · Actualizar el arco de la dona (#donutArc) con el índice AQI
+    · (Opcional) Conectar con el backend/SQLite para datos en tiempo real
+  ================================================================
+-->
+<script src="script.js"></script>
+</body>
+</html>

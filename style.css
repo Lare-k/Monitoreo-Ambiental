@@ -1,0 +1,664 @@
+/* ================================================================
+   1. RESET & VARIABLES GLOBALES
+   · El reset elimina márgenes/paddings nativos del navegador y
+     fuerza box-sizing: border-box para que padding y border
+     formen parte del tamaño declarado del elemento.
+   · Las variables CSS en :root actúan como "tokens de diseño":
+     cambiar un valor aquí lo propaga a toda la interfaz.
+================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    /* Paleta de fondo y superficies */
+  --bg:         #060916; /* Fondo */
+  --surface:    #0C1220; /* Tarjetas */
+  --surface2:   #101A30; /* Inputs y elementos secundarios */
+  --border:     rgba(255,255,255,0.055); /* Bordes */
+
+  /* Colores de acento (Métricas) */
+  --orange-a:   #FF8C00;
+  --orange-b:   #E63A00;
+  --orange-c:   #FFB347;
+  --purple-a:   #7B3FE4;
+  --purple-b:   #4A1A8C;
+  --blue-bar:   #4E9AF1;
+  --green:      #3DD17A;
+  --yellow:     #FFC83C;
+  --red:        #FF4B4B;
+
+  /* Tipografía */
+  --text-1:     #FFFFFF; /* Texto principal */
+  --text-2:     #8A95B0;  /* Texto secundario/etiquetas */
+  --text-3:     #485070;  /* Redondeo de esquinas */
+  --radius:     14px; /* Espacio entre tarjetas */
+  --gap:        14px;
+  --font-main:  'Outfit', sans-serif;
+  --font-mono:  'Space Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased; /* Suavizado de fuentes en WebKit/Blink */
+}
+
+/* ─── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+/* ================================================================
+   3. TITLE BAR
+   Barra fija superior con el logotipo y el nombre del sistema.
+   El gradiente horizontal refuerza la profundidad del encabezado.
+================================================================ */
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  height: 44px;
+  background: linear-gradient(90deg, #0C1838 0%, var(--bg) 100%); /* Azul oscuro → fondo */
+  border-bottom: 1px solid var(--border); 
+  flex-shrink: 0; /* Impide que la barra se comprima al hacer flex en .app */
+}
+
+/* Logotipo en forma de diamante (rombo) generado con clip-path */
+.title-bar .logo {
+  width: 18px; height: 18px;
+  background: linear-gradient(135deg, var(--orange-c), var(--orange-a), var(--orange-b));
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Rombo de 4 vértices */
+  flex-shrink: 0;
+}
+
+
+/* Nombre del sistema en fuente monoespaciada con tracking amplio */
+.title-bar .brand {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--text-2);
+  flex: 1; /* Empuja los botones de ventana hacia la derecha */
+}
+
+
+/* Botones de ventana (minimizar, maximizar, cerrar) — uso futuro */
+.title-bar .win-btns {
+  display: flex;
+  gap: 8px;
+}
+.win-btn {
+  width: 28px; height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.win-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+.win-btn.close:hover { background: #c0392b; color: #fff; }
+
+/* ================================================================
+   4. LAYOUT PRINCIPAL
+   .app      → columna vertical que ocupa al menos toda la ventana
+   .dashboard → área de contenido flexible con dos filas de tarjetas
+   .top-grid / .bottom-grid → grids CSS para distribuir las tarjetas
+================================================================ */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+.dashboard {
+  flex: 1; /* Ocupa todo el alto restante después del title-bar */
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-height: 0; /* Necesario para que flex: 1 funcione con overflow interno */
+}
+
+/* ─── GRIDS ───────────────────────────────────────────────── */
+.top-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.5fr 1fr 1fr; /* Proporciones personalizadas para cada tarjeta */
+  gap: var(--gap);
+  flex: 0.45; /* Ocupará el 45% del espacio vertical disponible */
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr; /* Proporciones personalizadas para cada tarjeta */
+  gap: var(--gap);
+  flex: 0.55; /* Ocupará el 55% del espacio vertical disponible */
+}
+
+/* ================================================================
+   5. CARD BASE
+   Estilo base que heredan todas las tarjetas.
+   Las clases específicas (temp-card, hum-card, etc.) sobrescriben
+   solo lo necesario.
+================================================================ */.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  position: relative; /* Para posicionamiento absoluto de elementos internos */
+  overflow: hidden; /* Oculta desbordamientos del pseudo-elemento ::before   */
+}
+
+
+/* Etiqueta de sección en la parte superior de cada tarjeta */
+.card-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 10px;
+  letter-spacing: .3px;
+}
+
+/* ================================================================
+   6. TARJETA: TEMPERATURA
+   Fondo de gradiente naranja intenso (sobreescribe --surface).
+   Se usa flex column con justify-content: space-between para
+   separar el valor principal de las estadísticas inferiores.
+================================================================ */
+.temp-card {
+  background: linear-gradient(145deg, #FFB84D 0%, #FF7A00 40%, #E63A00 100%);
+  border: none; /* El gradiente hace de borde visual */
+  display: flex; 
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+}
+
+.temp-card .card-label { color: rgba(255,255,255,.85); font-size: 13px; }
+
+
+/* Fila con el valor principal + flecha de tendencia */
+.temp-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+
+/* Valor numérico principal — tamaño fluido entre 42px y 58px */
+.temp-value {
+  font-size: clamp(42px, 5vw, 58px);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+
+/* Ícono SVG de flecha que indica tendencia (arriba/abajo) */
+.temp-arrow-classic {
+  width: 28px;
+  height: 28px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2px;
+  margin-left: 6px;
+}
+
+/* Temperatura de sensación térmica bajo el valor principal */
+.temp-sensation {
+  font-size: 13px;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 16px;
+}
+
+
+/* Separadores horizontales */
+.card-sep {
+  height: 1px;
+  background: rgba(255,255,255,.2);  /* Claro (sobre fondo naranja) */
+  margin: 10px 0;
+}
+
+/* Oscuro (sobre fondo --surface) */
+.card-sep-dark {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+
+/* Grid de 3 columnas para min / promedio / máx */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.stat-col { text-align: center; }
+.stat-col .s-label {
+  font-size: 11px;
+  color: rgba(255,255,255,.7);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.stat-col .s-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Variante oscura de stats-row (para la tarjeta de Humedad, fondo dark) */
+.stats-row.dark .stat-col .s-label { color: var(--text-3); }
+.stats-row.dark .stat-col .s-value { color: var(--text-1); font-size: 14px; }
+
+/* ================================================================
+   7. TARJETA: HUMEDAD
+   Fondo --surface estándar.
+   La barra de progreso representa visualmente el porcentaje.
+================================================================ */
+.hum-card { display: flex; flex-direction: column; justify-content: space-between; }
+
+/* Valor porcentual grande */
+.hum-value {
+  font-size: clamp(38px, 4vw, 52px);
+  font-weight: 800;
+  color: var(--text-1);
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+/* Pista gris de la barra de progreso */
+.progress-track {
+  height: 8px;
+  background: rgba(255,255,255,.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+/*
+  Relleno animado de la barra de humedad.
+  El width (47%) se define inline en el HTML; podría animarse
+  desde script.js con una transición CSS si se conecta a datos reales.
+*/
+.progress-fill-hum {
+  height: 100%;
+  width: 47%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4E9AF1, #A855F7); /* Azul → Púrpura */
+}
+
+/* ================================================================
+   8. TARJETA: ORIGEN DE CONTAMINACIÓN
+   Centrada vertical y horizontalmente.
+   El label se posiciona en absolute para no interrumpir el flex center.
+================================================================ */
+.cont-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+}
+.cont-card .card-label {
+  align-self: flex-start;
+  position: absolute; /* Flota en la esquina superior izquierda */
+  top: 18px; left: 18px;
+}
+.car-emoji { font-size: 52px; line-height: 1; } /* Emoji del tipo de fuente */
+.cont-label {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+/* ================================================================
+   9. TARJETA: ESTADO
+   Estructura similar a cont-card: centrada, con label en absolute.
+   El escudo tiene un anillo semitransparente verde para reforzar
+   visualmente el estado "Normal".
+================================================================ */
+.status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+.status-card .card-label {
+  position: absolute;
+  top: 18px; left: 18px;
+}
+
+/* Círculo de fondo del ícono + anillo de color de estado */
+.shield-wrap {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: #1A2235;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px rgba(61,209,122,.25); /* Anillo verde (estado Normal) */
+}
+
+/* Ícono del escudo con drop-shadow verde */
+.shield-icon {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 8px rgba(61,209,122,.5));
+}
+.status-label {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* ================================================================
+   10. TARJETA: HISTORIAL
+   Contiene las tabs de métricas, el selector de rango y el canvas.
+   La variable dinámica --active-color (inyectada por script.js)
+   colorea el borde del select y el indicador cuadrado según la
+   métrica activa.
+================================================================ */
+.hist-card { padding: 18px 18px 14px; }
+.hist-header { margin-bottom: 14px; }
+
+
+/* ── Pestañas de métricas ──────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.tab-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+/*
+  El botón activo recibe background-color y border-color directamente
+  desde script.js → updateTabColors() usando el colorA de la métrica.
+  El color de texto siempre es blanco (!important para no ser sobrescrito).
+*/
+.tab-btn.active {
+  color: #fff !important; /* Mantenemos el texto blanco */
+  font-weight: 600;
+}
+.tab-btn:hover:not(.active) {
+  border-color: rgba(255,255,255,.2);
+  color: var(--text-1);
+}
+
+/* ── Selector de rango temporal ────────────────────────────── */
+.rango-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rango-label {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.rango-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+
+/* Select con apariencia personalizada (se elimina el arrow nativo) */
+.rango-select {
+  appearance: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-1);
+  font-family: var(--font-main);
+  font-size: 12px;
+  padding: 6px 36px 6px 12px; /* Padding derecho extra para el indicador cuadrado */
+  cursor: pointer;
+  outline: none;
+  min-width: 160px;
+  transition: border-color .3s; /* Transición más suave */
+}
+
+
+
+/*
+  Al hacer hover o focus, el borde toma el color de la métrica activa.
+  --active-color es inyectada por updateTabColors() en script.js.
+  Si no existe (carga inicial), usa --orange-a como fallback.
+*/
+.rango-select:hover { border-color: var(--active-color, var(--orange-a)); }
+.rango-select:focus { border-color: var(--active-color, var(--orange-a)); }
+
+
+/*
+  Indicador cuadrado decorativo que reemplaza la flecha nativa del select.
+  Su color también sigue a --active-color para ser coherente con la métrica.
+*/
+.rango-indicator {
+  position: absolute;
+  right: 12px;
+  width: 10px; height: 10px;
+  background: var(--active-color, var(--orange-a)); /* Cuadradito dinámico */
+  border-radius: 2px;
+  pointer-events: none;
+  transition: background .3s;
+}
+
+
+/* ── Canvas de la gráfica ──────────────────────────────────── */
+.chart-wrap {
+  width: 100%;
+  height: 200px; /* Altura fija del área de la gráfica */
+  position: relative;
+  margin-top: 8px;
+}
+
+
+#histCanvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ================================================================
+   11. TARJETA: CALIDAD DEL AIRE
+   Layout flex columna centrado.
+   El donut SVG es responsivo con min(220px, 50vw).
+   Las barras PM usan .pm-fill con transition para animarse desde 0%
+   hasta el valor definido en data-w (vía script.js o CSS directo).
+================================================================ */
+.air-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra la dona horizontalmente */
+  gap: 32px; /* Separación grande entre la dona y la lista de barras */
+  padding: 24px 24px;
+}
+
+.air-card .card-label {
+  align-self: flex-start; /* Mantiene el título pegado a la izquierda */
+  margin-bottom: 0;
+}
+
+/* Contenedor de la dona SVG — responsivo y de proporción cuadrada */
+.donut-wrap {
+  position: relative;
+  width: min(220px, 50vw); /* Máximo 220px, nunca más del 50% del viewport */
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.donut-wrap svg { width: 100%; height: 100%; }
+
+/* Texto centrado dentro del agujero de la dona */
+.donut-center {
+  position: absolute;
+  inset: 0; /* Ocupa exactamente el área del contenedor */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+/* Porcentaje del índice AQI — tamaño fluido */
+.donut-pct {
+  font-size: clamp(34px, 5vw, 42px); 
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1;
+}
+
+/* ── Lista de barras PM ─────────────────────────────────────── */
+.pm-list {
+  width: 100%; /* Asegura que las barras ocupen todo el ancho de la tarjeta */
+  display: flex;
+  flex-direction: column;
+  gap: 26px; /* Líneas mucho más espaciadas (antes 12px) */
+}
+
+.pm-item { display: flex; flex-direction: column; gap: 8px; }
+
+
+/* Fila de encabezado de cada ítem PM */
+.pm-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Bolita de color identificadora de la partícula */
+.pm-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pm-name {
+  font-size: 13px; 
+  color: var(--text-2);
+  font-weight: 500;
+}
+.pm-val {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+/* Empuja pm-status hacia la derecha */
+.pm-spacer { flex: 1; }
+
+/* Color definido inline en HTML */
+.pm-status {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+/* Pista gris de la barra de partícula */
+.pm-track {
+  width: 100%;
+  height: 8px; /* Barras de progreso ligeramente más gruesas */
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+
+/*
+  Relleno de la barra. Parte en width: 0% (definido inline en el HTML).
+  script.js (o una transición CSS pura) actualiza el width al valor
+  guardado en el atributo data-w del elemento.
+  La transición cubic-bezier da el efecto de "resorte suave".
+*/
+.pm-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+
+/* ================================================================
+   12. RESPONSIVE
+   Dos breakpoints que reorganizan los grids para pantallas pequeñas.
+ 
+   1024px (tablets y laptops pequeños):
+     · top-grid pasa de 4 columnas a 2×2
+     · temp-card se expande a todo el ancho (span completo)
+     · bottom-grid pasa de 2 columnas a 1
+ 
+   640px (móviles):
+     · top-grid se convierte en 1 columna
+     · Ajustes de padding, font-size y altura del canvas
+================================================================ */
+@media (max-width: 1024px) {
+  .top-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .temp-card { grid-column: 1 / -1; min-height: 180px; } /* Ocupa todo el ancho */
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard { padding: 12px; gap: 10px; }
+  .top-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .temp-card { grid-column: auto; } /* Cancela el span completo en 1 columna */
+  .bottom-grid { gap: 10px; }
+  .title-bar .brand { font-size: 8px; letter-spacing: 1.5px; }
+  .tabs { gap: 6px; }
+  .tab-btn { padding: 5px 12px; font-size: 11px; }
+  .chart-wrap { height: 160px; } /* Reduce la altura del canvas en móvil */
+}
+
+/* ================================================================
+   13. ANIMACIONES DE ENTRADA
+   Cada tarjeta aparece con un fadeUp (deslizamiento desde abajo + opacidad).
+   Los delays escalonados (0.05s incrementales) crean un efecto en cascada
+   de arriba hacia abajo, de izquierda a derecha.
+================================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card { animation: fadeUp .45s ease both; }
+/* Tarjetas del top-grid (orden: temp → hum → contaminación → estado) */
+.top-grid .card:nth-child(1) { animation-delay: .05s; }
+.top-grid .card:nth-child(2) { animation-delay: .1s; }
+.top-grid .card:nth-child(3) { animation-delay: .15s; }
+.top-grid .card:nth-child(4) { animation-delay: .2s; }
+
+/* Tarjetas del bottom-grid (historial → calidad del aire) */
+.bottom-grid .card:nth-child(1) { animation-delay: .25s; }
+.bottom-grid .card:nth-child(2) { animation-delay: .3s; }
+
+/*
+  Efecto de brillo interno en la tarjeta de temperatura.
+  El pseudo-elemento ::before superpone un radial-gradient
+  elíptico semitransparente en la esquina superior derecha
+  para simular un punto de luz cálido. overflow: hidden en
+  .card asegura que no se salga de los bordes redondeados.
+*/
+.temp-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 30%, rgba(255,200,100,.15) 0%, transparent 60%);
+  pointer-events: none;
+}
