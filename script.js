@@ -122,136 +122,101 @@ function getData(metric, rango) {
 //  Se llama cada vez que cambia la métrica, el rango, o el tamaño.
 // ================================================================
 function drawChart() {
-  const W = canvas.width; // Ancho real del canvas (en px físicos)
-  const H = canvas.height; // Alto  real del canvas (en px físicos)
-  ctx.clearRect(0, 0, W, H); // Limpia el frame anterior
+  // AJUSTE PARA PANTALLAS DE CELULAR (RETINA DISPLAYS)
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.width / dpr;
+  const H = canvas.height / dpr;
+  
+  ctx.clearRect(0, 0, W, H); // Limpia el dibujo anterior
 
   const ds     = DATASETS[activeMetric];
   const data   = getData(activeMetric, activeRango);
   const labels = getLabels(activeRango);
 
-    // ── Márgenes internos del área de dibujo ──────────────────────
-  const PAD_L  = 44; // Espacio para etiquetas del eje Y
-  const PAD_R  = 16; // Margen derecho
-  const PAD_T  = 14; // Margen superior
-  const PAD_B  = 34; // Espacio para etiquetas del eje X
-  const chartW = W - PAD_L - PAD_R; // Ancho útil de la gráfica
-  const chartH = H - PAD_T - PAD_B; // Alto útil de la gráfica
-
+  // Espaciados internos del canvas
+  const PAD_L  = 44; const PAD_R  = 16;
+  const PAD_T  = 14; const PAD_B  = 34;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
   const yMin = ds.yMin, yMax = ds.yMax;
 
-  // ── Fondo del canvas ──────────────────────────────────────────
+  // Fondo oscuro del canvas
   ctx.fillStyle = '#0D1525';
-  roundRect(ctx, 0, 0, W, H, 10); // Esquinas redondeadas
+  roundRect(ctx, 0, 0, W, H, 10);
   ctx.fill();
 
-  // ── Cuadrícula horizontal (líneas de referencia del eje Y) ────
-  ctx.setLineDash([3, 5]); // Líneas punteadas
+  // Dibuja las líneas punteadas horizontales y sus valores
+  ctx.setLineDash([3, 5]);
   ctx.lineWidth = 1;
-
   ds.yTicks.forEach(tick => {
-
-    // Línea horizontal de cuadrícula
     const y = PAD_T + chartH - ((tick - yMin) / (yMax - yMin)) * chartH;
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.moveTo(PAD_L, y);
-    ctx.lineTo(PAD_L + chartW, y);
-    ctx.stroke();
+    ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + chartW, y); ctx.stroke();
 
-
-        // Etiqueta numérica a la izquierda de la línea
     ctx.fillStyle = 'rgba(160,170,195,0.7)';
     ctx.font = '10px Outfit, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText(tick, PAD_L - 6, y);
   });
-  ctx.setLineDash([]); // Restaura línea sólida
- 
+  ctx.setLineDash([]);
 
-  // ── Cálculo de coordenadas de los puntos ──────────────────────
-  const n     = data.length;
-   // slotW: distancia horizontal entre puntos consecutivos
-  // Se usa n-1 para que el primer y último punto toquen los bordes  const slotW = chartW / (n > 1 ? n - 1 : 1); 
-  const slotW = chartW / (n > 1 ? n - 1 : 1);
-
-  
+  // Calcula la posición X/Y exacta para cada dato
+  const n = data.length;
+  const slotW = chartW / (n > 1 ? n - 1 : 1); 
   const points = data.map((val, i) => {
-
-        // Normaliza el valor al rango [0, chartH] y lo invierte (Y crece hacia abajo)
-    const normH = ((val - yMin) / (yMax - yMin)) * chartH; // Clampea para no salir del área
-    return {
-      x: PAD_L + i * slotW,
-      y: Math.max(PAD_T, PAD_T + chartH - normH)
-    };
+    const normH = ((val - yMin) / (yMax - yMin)) * chartH;
+    return { x: PAD_L + i * slotW, y: Math.max(PAD_T, PAD_T + chartH - normH) };
   });
 
   if (points.length > 0) {
-
-    // ── Paso 1: Área rellena bajo la línea ──────────────────────
+    // 1. Dibuja el gradiente sombreado debajo de la línea
     ctx.beginPath();
-    ctx.moveTo(points[0].x, PAD_T + chartH); // Esquina inferior izquierda
+    ctx.moveTo(points[0].x, PAD_T + chartH);
     points.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.lineTo(points[n - 1].x, PAD_T + chartH); // Esquina inferior derecha
+    ctx.lineTo(points[n - 1].x, PAD_T + chartH);
     ctx.closePath();
 
-
-        // Gradiente vertical: colorA semitransparente arriba → transparente abajo
     const fillGrad = ctx.createLinearGradient(0, PAD_T, 0, PAD_T + chartH);
-    fillGrad.addColorStop(0, ds.colorA + '55'); // 33% opacidad
-    fillGrad.addColorStop(1, ds.colorA + '00'); // 0% opacidad 
-    ctx.fillStyle = fillGrad;
-    ctx.fill();
+    fillGrad.addColorStop(0, ds.colorA + '55'); // Opacidad arriba
+    fillGrad.addColorStop(1, ds.colorA + '00'); // Trasparente abajo
+    ctx.fillStyle = fillGrad; ctx.fill();
 
-    // ── Paso 2: Línea principal con efecto neón ──────────────────
+    // 2. Dibuja la línea principal con efecto Neón
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     points.forEach(p => ctx.lineTo(p.x, p.y));
 
     ctx.lineWidth = 3.5;
     ctx.strokeStyle = ds.colorA;
-    // Sombra difusa que simula brillo neón
-    ctx.shadowColor = ds.colorA;
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.shadowColor = ds.colorA; // Color del resplandor
+    ctx.shadowBlur = 10; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.stroke();
 
-    // Resetea la sombra para que no afecte los puntos ni las etiquetas
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
+    // Resetea sombras para no afectar otros dibujos
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
-    // ── Paso 3: Puntos de dato sobre la línea ───────────────────
-    // Cada punto es un círculo "hueco": fondo del card + borde de color
+    // 3. Dibuja los círculos (nodos) en cada dato de la línea
     points.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#0C1220'; // Color de fondo del card para efecto "punched"
-      ctx.fill();
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = ds.colorA;
-      ctx.stroke();
+      ctx.fillStyle = '#0C1220'; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = ds.colorA; ctx.stroke();
     });
   }
 
-  // ── Etiquetas del eje X ───────────────────────────────────────
+  // Dibuja las etiquetas de tiempo (Eje X) en la base
   ctx.fillStyle = 'rgba(90,100,130,0.9)';
   ctx.font      = '9px Outfit, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-
-    // Si hay más de 8 puntos, muestra una etiqueta de cada dos para evitar solapamiento
-  const step = n > 8 ? 2 : 1;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const step = n > 8 ? 2 : 1; // Salta etiquetas si hay muchas
   labels.forEach((lbl, i) => {
     if (i % step !== 0) return;
     const x = PAD_L + i * slotW;
     ctx.fillText(lbl, x, PAD_T + chartH + 10);
   });
 }
-
 
 // ================================================================
 //  SECCIÓN 4 — FUNCIÓN AUXILIAR: roundRect
