@@ -235,10 +235,18 @@ function resizeCanvas() {
 function animateDonut(porcentaje) {
   const arc  = document.getElementById('donutArc');
   if (!arc) return;
-  const circ = 2 * Math.PI * 78;
-  const dash = ((porcentaje || 0) / 100) * circ;
+  const circ = 2 * Math.PI * 78; // ≈ 490
+
+  let color;
+  if (porcentaje < 33)      color = '#3DD17A';
+  else if (porcentaje < 66) color = '#FFC83C';
+  else                      color = '#FF4B4B';
+
+  const dash = (porcentaje / 100) * circ;
+  arc.setAttribute('stroke', color);
   arc.style.transition = 'none';
   arc.setAttribute('stroke-dasharray', `0 ${circ}`);
+
   requestAnimationFrame(() => {
     setTimeout(() => {
       arc.style.transition = 'stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)';
@@ -318,10 +326,15 @@ function actualizarDashboard(d) {
   }
 
   // ── DONUT (% de contaminación) ─────────────────────────────────
-  const circ = 2 * Math.PI * 78;
-  const dash = (d.porcentaje_contaminacion / 100) * circ;
-  document.getElementById('donutArc').setAttribute('stroke-dasharray', `${dash} ${circ}`);
-  document.querySelector('.donut-pct').textContent = d.porcentaje_contaminacion + '%';
+  const pct = parseFloat(d.porcentaje_contaminacion) || 0;
+  animateDonut(pct);
+  document.querySelector('.donut-pct').textContent = pct + '%';
+
+  let color;
+  if (pct < 33)      color = '#3DD17A';
+  else if (pct < 66) color = '#FFC83C';
+  else               color = '#FF4B4B';
+    document.querySelector('.donut-pct').style.color = color;
 
   // ── BARRAS DE PM (PM1, PM2.5, PM10) ───────────────────────────
   const colorMap = { 'Bueno': '#3DD17A', 'Moderado': '#FFC83C', 'Malo': '#FF4B4B' };
