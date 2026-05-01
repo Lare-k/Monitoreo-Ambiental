@@ -287,10 +287,10 @@ const tempAnterior = parseFloat(arrow.dataset.prev || tempActual);
 
 if (tempActual > tempAnterior) {
   arrow.style.transform = 'rotate(0deg)';
-  arrow.style.color = '#FF8C00';
+  arrow.style.color = 'white';
 } else if (tempActual < tempAnterior) {
   arrow.style.transform = 'rotate(180deg)';
-  arrow.style.color = '#4E9AF1';
+  arrow.style.color = 'white';
 }
 
 arrow.dataset.prev = tempActual; // Guarda el valor actual para la próxima comparación
