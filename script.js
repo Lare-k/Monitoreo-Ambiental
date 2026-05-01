@@ -477,8 +477,8 @@ window.addEventListener('load', () => {
   // Polling automático:
   // · Datos actuales  → cada 30 segundos
   // · Historial       → cada 60 segundos
-  setInterval(fetchActual,      30_000);
-  setInterval(cargarHistorial,  60_000);
+  setInterval(fetchActual,      5_000);
+  setInterval(cargarHistorial,  15_000);
 
   setInterval(() => {
     const el = document.getElementById('liveTime');
