@@ -235,7 +235,7 @@ function resizeCanvas() {
 function animateDonut(porcentaje) {
   const arc  = document.getElementById('donutArc');
   if (!arc) return;
-  const circ = 2 * Math.PI * 78; // ≈ 490
+  const circ = 2 * Math.PI * 78;
 
   let color;
   if (porcentaje < 33)      color = '#3DD17A';
@@ -244,6 +244,7 @@ function animateDonut(porcentaje) {
 
   const dash = (porcentaje / 100) * circ;
   arc.setAttribute('stroke', color);
+  arc.setAttribute('stroke-dashoffset', circ / 4); // ← esto fija el inicio arriba
   arc.style.transition = 'none';
   arc.setAttribute('stroke-dasharray', `0 ${circ}`);
 
