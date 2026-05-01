@@ -233,25 +233,16 @@ function resizeCanvas() {
 //  SECCIÓN 6 — ANIMACIÓN DEL DONUT
 // ================================================================
 function animateDonut(porcentaje) {
+  // Solo para la carga inicial desde 0
   const arc  = document.getElementById('donutArc');
   if (!arc) return;
   const circ = 2 * Math.PI * 78;
-
-  let color;
-  if (porcentaje < 33)      color = '#3DD17A';
-  else if (porcentaje < 66) color = '#FFC83C';
-  else                      color = '#FF4B4B';
-
-  const dash = (porcentaje / 100) * circ;
-  arc.setAttribute('stroke', color);
-  arc.setAttribute('stroke-dashoffset', circ / 4); // ← esto fija el inicio arriba
   arc.style.transition = 'none';
   arc.setAttribute('stroke-dasharray', `0 ${circ}`);
-
   requestAnimationFrame(() => {
     setTimeout(() => {
       arc.style.transition = 'stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)';
-      arc.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+      arc.setAttribute('stroke-dasharray', `${(porcentaje / 100) * circ} ${circ}`);
     }, 400);
   });
 }
@@ -289,6 +280,20 @@ function actualizarDashboard(d) {
     statsTemp[1].textContent = parseFloat(d.t_prom).toFixed(1) + '°C';
     statsTemp[2].textContent = parseFloat(d.t_max).toFixed(1)  + '°C';
   }
+  // ── FLECHA DE TENDENCIA ────────────────────────────────────
+const arrow = document.querySelector('.temp-arrow-classic');
+const tempActual = parseFloat(d.temperatura);
+const tempAnterior = parseFloat(arrow.dataset.prev || tempActual);
+
+if (tempActual > tempAnterior) {
+  arrow.style.transform = 'rotate(0deg)';
+  arrow.style.color = '#FF8C00';
+} else if (tempActual < tempAnterior) {
+  arrow.style.transform = 'rotate(180deg)';
+  arrow.style.color = '#4E9AF1';
+}
+
+arrow.dataset.prev = tempActual; // Guarda el valor actual para la próxima comparación
 
   // ── HUMEDAD ────────────────────────────────────────────────────
   document.querySelector('.hum-value').textContent = parseFloat(d.humedad).toFixed(1) + '%';
@@ -327,15 +332,22 @@ function actualizarDashboard(d) {
   }
 
   // ── DONUT (% de contaminación) ─────────────────────────────────
-  const pct = parseFloat(d.porcentaje_contaminacion) || 0;
-  animateDonut(pct);
-  document.querySelector('.donut-pct').textContent = pct + '%';
+  const arc  = document.getElementById('donutArc');
+  const pct  = parseFloat(d.porcentaje_contaminacion) || 0;
+  const circ = 2 * Math.PI * 78;
+  const dash = (pct / 100) * circ;
 
   let color;
   if (pct < 33)      color = '#3DD17A';
   else if (pct < 66) color = '#FFC83C';
   else               color = '#FF4B4B';
-    document.querySelector('.donut-pct').style.color = color;
+
+arc.setAttribute('stroke', color);
+arc.style.transition = 'stroke-dasharray 1s ease';
+arc.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+
+document.querySelector('.donut-pct').textContent = pct + '%';
+document.querySelector('.donut-pct').style.color = color;
 
   // ── BARRAS DE PM (PM1, PM2.5, PM10) ───────────────────────────
   const colorMap = { 'Bueno': '#3DD17A', 'Moderado': '#FFC83C', 'Malo': '#FF4B4B' };
