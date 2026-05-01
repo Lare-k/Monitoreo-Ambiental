@@ -198,6 +198,20 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+function recalcAxis(metric) {
+  const ds = DATASETS[metric];
+  const allData = [...ds.data1h, ...ds.data3h, ...ds.data6h]
+    .map(Number).filter(v => !isNaN(v) && isFinite(v));
+  if (allData.length === 0) return;
+  const min = Math.min(...allData);
+  const max = Math.max(...allData);
+  const pad = Math.max((max - min) * 0.2, 1);
+  ds.yMin = parseFloat((min - pad).toFixed(1));
+  ds.yMax = parseFloat((max + pad).toFixed(1));
+  const step = (ds.yMax - ds.yMin) / 3;
+  ds.yTicks = [0,1,2,3].map(i => parseFloat((ds.yMin + i * step).toFixed(1)));
+}
+
 
 // ================================================================
 //  SECCIÓN 5 — RESIZE CON SOPORTE DPI
@@ -336,6 +350,13 @@ document.querySelectorAll('.pm-item').forEach((item, i) => {
     item.querySelector('.pm-fill').style.width         = pmData[i].pct + '%';
     item.querySelector('.pm-fill').style.background    = gradient;
   });
+
+  // ── INDICADOR LIVE ─────────────────────────────────────────
+const dot = document.querySelector('.live-dot');
+if (dot && d.timestamp) {
+  const segundos = Math.floor(Date.now() / 1000) - d.timestamp;
+  dot.style.background = segundos < 60 ? '#3DD17A' : '#FF4B4B';
+}
 }
 
 
@@ -375,6 +396,8 @@ async function cargarHistorial() {
       // Etiquetas del eje X con la hora real de cada lectura
       labelsArr.length = 0;
       entradas.forEach(e => labelsArr.push(e.ultima_actualizacion || ''));
+
+      ['temp','hum','pm1','pm25','pm10'].forEach(recalcAxis);
     }
 
     aplicar(entradas1h, '1h', LABELS_1H);
@@ -393,6 +416,10 @@ async function cargarHistorial() {
 //  SECCIÓN 10 — FETCH DE DATOS ACTUALES DE FIREBASE
 // ================================================================
 async function fetchActual() {
+  const now = new Date();
+  const el = document.getElementById('liveTime');
+  if (el) el.textContent = now.toTimeString().slice(0,8);
+
   try {
     const res  = await fetch(FIREBASE_ACTUAL_URL);
     const data = await res.json();
@@ -452,4 +479,9 @@ window.addEventListener('load', () => {
   // · Historial       → cada 60 segundos
   setInterval(fetchActual,      30_000);
   setInterval(cargarHistorial,  60_000);
+
+  setInterval(() => {
+    const el = document.getElementById('liveTime');
+    if (el) el.textContent = new Date().toTimeString().slice(0, 8);
+  }, 1000);
 });
