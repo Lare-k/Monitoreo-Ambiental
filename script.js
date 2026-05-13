@@ -305,16 +305,18 @@ arrow.dataset.prev = tempActual; // Guarda el valor actual para la próxima comp
     statsHum[2].textContent = d.h_max  + '%';
   }
 
-  // ── ORIGEN DE CONTAMINACIÓN ────────────────────────────────────
-  const origenMap = {
-    'Combustión / Vehicular': { emoji: '🚗', label: 'Vehicular'      },
-    'Polvo / Construcción':   { emoji: '🏗️', label: 'Construcción'   },
-    'Mezcla Urbana':          { emoji: '🏙️', label: 'Mezcla Urbana'  },
-    'Calculando...':          { emoji: '⏳', label: 'Calculando...'   },
-  };
-  const origen = origenMap[d.origen] || { emoji: '🏙️', label: d.origen };
-  document.querySelector('.car-emoji').textContent  = origen.emoji;
-  document.querySelector('.cont-label').textContent = origen.label;
+  // ── NIVEL DE RIESGO ────────────────────────────────────
+  const recomendacionMap = {
+  'Sin Riesgo':      { emoji: '✅', texto: 'Sin precauciones necesarias'              },
+  'Riesgo Minimo':   { emoji: '🟡', texto: 'Grupos sensibles tomen precauciones'      },
+  'Riesgo Moderado': { emoji: '⚠️', texto: 'Evitar exposición prolongada'             },
+  'Riesgo Alto':     { emoji: '🔶', texto: 'Reducir exposición al mínimo'             },
+  'Riesgo Muy Alto': { emoji: '🔴', texto: 'Exposición riesgosa para todos'           },
+  'Peligroso':       { emoji: '☠️', texto: 'Niveles peligrosos, minimizar exposición' },
+};
+const rec = recomendacionMap[d.recomendacion] || { emoji: '❓', texto: d.recomendacion };
+document.querySelector('.cont-emoji').textContent = rec.emoji;
+document.querySelector('.cont-label').textContent = rec.texto;
 
   // ── ESTADO (Detección de Humo) ─────────────────────────────────
   // El panel "Estado" solo indica si hay humo o no.
@@ -333,20 +335,24 @@ arrow.dataset.prev = tempActual; // Guarda el valor actual para la próxima comp
 
   // ── DONUT (% de contaminación) ─────────────────────────────────
   const arc  = document.getElementById('donutArc');
-  const pct  = parseFloat(d.porcentaje_contaminacion) || 0;
+  const pct  = Math.min((parseFloat(d.aqi) / 500) * 100, 100) || 0;
   const circ = 2 * Math.PI * 78;
   const dash = (pct / 100) * circ;
 
   let color;
-  if (pct < 33)      color = '#3DD17A';
-  else if (pct < 66) color = '#FFC83C';
-  else               color = '#FF4B4B';
+  const aqi = parseFloat(d.aqi) || 0;
+  if (aqi <= 50)       color = '#3DD17A';  // Buena
+  else if (aqi <= 100) color = '#FFC83C';  // Moderada
+  else if (aqi <= 150) color = '#FF8C00';  // Dañina para sensibles
+  else if (aqi <= 200) color = '#FF4B4B';  // Dañina
+  else if (aqi <= 300) color = '#A855F7';  // Muy dañina
+  else                 color = '#7B0000';  // Peligrosa
 
 arc.setAttribute('stroke', color);
 arc.style.transition = 'stroke-dasharray 1s ease';
 arc.setAttribute('stroke-dasharray', `${dash} ${circ}`);
 
-document.querySelector('.donut-pct').textContent = pct + '%';
+document.querySelector('.donut-pct').textContent = d.aqi || '0';
 document.querySelector('.donut-pct').style.color = color;
 
   // ── BARRAS DE PM (PM1, PM2.5, PM10) ───────────────────────────
