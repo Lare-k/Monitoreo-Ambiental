@@ -410,9 +410,15 @@ async function cargarHistorial() {
     const ahora = Date.now() / 1000; // Timestamp actual en segundos
 
     // Filtrar entradas según el rango de tiempo y tomar las últimas muestras
-    const entradas1h = todas.filter(e => e.timestamp >= ahora - 3600).slice(-12);
-    const entradas2h = todas.filter(e => e.timestamp >= ahora - 7200).slice(-24);
-    const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-36);
+    function subsample(arr, max) {
+      if (arr.length <= max) return arr;
+      const step = Math.ceil(arr.length / max);
+      return arr.filter((_, i) => i % step === 0).slice(-max);
+    }
+
+    const entradas1h = subsample(todas.filter(e => e.timestamp >= ahora - 3600),  12);
+    const entradas2h = subsample(todas.filter(e => e.timestamp >= ahora - 7200),  24);
+    const entradas3h = subsample(todas.filter(e => e.timestamp >= ahora - 10800), 36);
 
     // Función auxiliar: sobreescribe los datos y etiquetas de cada rango
   function aplicar(entradas, sufijo, labelsArr) {
