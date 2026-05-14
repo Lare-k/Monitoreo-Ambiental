@@ -97,6 +97,7 @@ function drawChart() {
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.width / dpr;
   const H = canvas.height / dpr;
+  const scrollX = canvas.parentElement.scrollLeft || 0;
   ctx.clearRect(0, 0, W, H);
 
   const ds     = DATASETS[activeMetric];
@@ -121,10 +122,6 @@ function drawChart() {
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + chartW, y); ctx.stroke();
-    ctx.fillStyle = 'rgba(160,170,195,0.7)';
-    ctx.font = '10px Outfit, sans-serif';
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    ctx.fillText(tick, PAD_L - 6, y);
   });
   ctx.setLineDash([]);
 
@@ -168,6 +165,19 @@ function drawChart() {
       ctx.lineWidth = 2.5; ctx.strokeStyle = ds.colorA; ctx.stroke();
     });
   }
+
+  // Fondo fijo para el eje Y (sigue el scroll)
+  ctx.fillStyle = '#0D1525';
+  ctx.fillRect(scrollX, 0, PAD_L, H);
+
+  // Etiquetas eje Y (siguen el scroll)
+  ctx.fillStyle = 'rgba(160,170,195,0.7)';
+  ctx.font = '10px Outfit, sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ds.yTicks.forEach(tick => {
+    const y = PAD_T + chartH - ((tick - yMin) / (yMax - yMin)) * chartH;
+    ctx.fillText(tick, scrollX + PAD_L - 6, y);
+  });
 
   // Etiquetas eje X
   ctx.fillStyle = 'rgba(90,100,130,0.9)';
@@ -509,6 +519,7 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(resizeCanvas, 80);
 });
 
+canvas.parentElement.addEventListener('scroll', drawChart);
 
 // ================================================================
 //  SECCIÓN 12 — INICIALIZACIÓN
