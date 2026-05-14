@@ -409,28 +409,36 @@ async function cargarHistorial() {
 
     const ahora = Date.now() / 1000; // Timestamp actual en segundos
 
-    // Filtrar entradas según el rango de tiempo y tomar las últimas 12 muestras
+    // Filtrar entradas según el rango de tiempo y tomar las últimas muestras
     const entradas1h = todas.filter(e => e.timestamp >= ahora - 3600).slice(-12);
-    const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-12);
-    const entradas6h = todas.filter(e => e.timestamp >= ahora - 21600).slice(-12);
+    const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-20);
+    const entradas6h = todas.filter(e => e.timestamp >= ahora - 21600).slice(-30);
 
     // Función auxiliar: sobreescribe los datos y etiquetas de cada rango
-    function aplicar(entradas, sufijo, labelsArr) {
-      if (entradas.length === 0) return;
-
-      // Sobreescribir datos del sensor para el rango correspondiente
-      DATASETS.temp[`data${sufijo}`] = entradas.map(e => parseFloat(e.temperatura).toFixed(1));
-      DATASETS.hum[`data${sufijo}`]  = entradas.map(e => parseFloat(e.humedad).toFixed(1));
-      DATASETS.pm1[`data${sufijo}`]  = entradas.map(e => e.pm1);
-      DATASETS.pm25[`data${sufijo}`] = entradas.map(e => e.pm25);
-      DATASETS.pm10[`data${sufijo}`] = entradas.map(e => e.pm10);
-
-      // Etiquetas del eje X con la hora real de cada lectura
+  function aplicar(entradas, sufijo, labelsArr) {
+    if (entradas.length === 0) {
       labelsArr.length = 0;
-      entradas.forEach(e => labelsArr.push(e.ultima_actualizacion || ''));
-
-      ['temp','hum','pm1','pm25','pm10'].forEach(recalcAxis);
+      DATASETS['temp'][`data${sufijo}`] = [];
+      DATASETS['hum'][`data${sufijo}`]  = [];
+      DATASETS['pm1'][`data${sufijo}`]  = [];
+      DATASETS['pm25'][`data${sufijo}`] = [];
+      DATASETS['pm10'][`data${sufijo}`] = [];
+      return;
     }
+
+    // Sobreescribir datos del sensor para el rango correspondiente
+    DATASETS.temp[`data${sufijo}`] = entradas.map(e => parseFloat(e.temperatura).toFixed(1));
+    DATASETS.hum[`data${sufijo}`]  = entradas.map(e => parseFloat(e.humedad).toFixed(1));
+    DATASETS.pm1[`data${sufijo}`]  = entradas.map(e => e.pm1);
+    DATASETS.pm25[`data${sufijo}`] = entradas.map(e => e.pm25);
+    DATASETS.pm10[`data${sufijo}`] = entradas.map(e => e.pm10);
+
+    // Etiquetas del eje X con la hora real de cada lectura
+    labelsArr.length = 0;
+    entradas.forEach(e => labelsArr.push(e.ultima_actualizacion || ''));
+
+    ['temp','hum','pm1','pm25','pm10'].forEach(recalcAxis);
+  }
 
     aplicar(entradas1h, '1h', LABELS_1H);
     aplicar(entradas3h, '3h', LABELS_3H);
