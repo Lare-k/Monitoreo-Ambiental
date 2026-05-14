@@ -461,9 +461,10 @@ html, body {
 /* ── Canvas de la gráfica ──────────────────────────────────── */
 .chart-wrap {
   width: 100%;
-  height: 200px; /* Altura fija del área de la gráfica */
+  height: 200px;
   position: relative;
   margin-top: 8px;
+  overflow-x: auto;
 }
 
 

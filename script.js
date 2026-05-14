@@ -220,10 +220,12 @@ function resizeCanvas() {
   const wrap = canvas.parentElement;
   const dpr  = window.devicePixelRatio || 1;
   const rect = wrap.getBoundingClientRect();
-  canvas.width  = rect.width  * dpr;
+  const isMobile = window.innerWidth <= 768;
+  const cssW = isMobile ? Math.max(rect.width, 700) : rect.width;
+  canvas.width  = cssW * dpr;
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
-  canvas.style.width  = rect.width  + 'px';
+  canvas.style.width  = cssW + 'px';
   canvas.style.height = rect.height + 'px';
   drawChart();
 }
