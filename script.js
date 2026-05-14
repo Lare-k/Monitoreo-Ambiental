@@ -23,45 +23,45 @@ const DATASETS = {
     yMin: 24.8, yMax: 27.9,
     yTicks: [24.8, 25.7, 26.7, 27.7],
     colorA: '#FF8C00', colorB: '#E63A00',
-    data1h: [25.7,26.1,25.9,27.2,26.5,27.5,26.2,25.8,27.1,26.7,25.5,26.9],
-    data3h: [25.2,25.9,26.4,25.7,26.1,27.0,26.6,25.4,26.8,27.2,25.9,26.3],
-    data6h: [24.9,25.3,25.8,26.2,25.5,26.0,26.7,25.1,25.6,26.4,25.8,26.9],
+    data1h: [],
+    data2h: [],
+    data3h: [],
   },
   hum: {
     label: 'Humedad', unit: '%',
     yMin: 30, yMax: 70,
     yTicks: [30, 40, 50, 60, 70],
     colorA: '#4E9AF1', colorB: '#A855F7',
-    data1h: [45,47,43,50,48,52,47,44,49,46,51,47],
-    data3h: [42,44,47,46,43,48,50,45,47,44,49,46],
-    data6h: [38,41,44,46,43,40,45,47,42,44,46,43],
+    data1h: [],
+    data2h: [],
+    data3h: [],
   },
   pm1: {
     label: 'PM 1.0', unit: 'µg',
     yMin: 0, yMax: 50,
     yTicks: [0, 12, 25, 37, 50],
     colorA: '#3DD17A', colorB: '#1A7A45',
-    data1h: [10,14,12,18,15,22,17,13,19,16,11,14],
-    data3h: [8,11,15,13,10,16,18,12,14,11,17,13],
-    data6h: [6,9,12,10,8,13,15,10,11,8,14,10],
+    data1h: [],
+    data2h: [],
+    data3h: [],
   },
   pm25: {
     label: 'PM 2.5', unit: 'µg',
     yMin: 0, yMax: 60,
     yTicks: [0, 15, 30, 45, 60],
     colorA: '#FFC83C', colorB: '#CC8800',
-    data1h: [20,25,22,30,26,35,28,21,32,27,19,24],
-    data3h: [15,20,25,22,18,28,31,20,24,19,29,22],
-    data6h: [10,16,21,18,14,22,26,17,19,15,23,18],
+    data1h: [],
+    data2h: [],
+    data3h: [],
   },
   pm10: {
     label: 'PM 10', unit: 'µg',
     yMin: 0, yMax: 80,
     yTicks: [0, 20, 40, 60, 80],
     colorA: '#FF4B4B', colorB: '#CC0000',
-    data1h: [35,42,38,50,44,58,46,36,52,45,33,40],
-    data3h: [28,35,42,38,30,46,52,34,40,32,48,37],
-    data6h: [20,28,35,30,24,38,44,28,32,25,40,30],
+    data1h: [],
+    data2h: [],
+    data3h: [],
   },
 };
 
@@ -69,24 +69,24 @@ const DATASETS = {
 // ================================================================
 //  SECCIÓN 2 — ETIQUETAS DEL EJE X (se sobreescriben con datos reales)
 // ================================================================
-const LABELS_1H = ['0:00','0:05','0:10','0:15','0:20','0:25','0:30','0:35','0:40','0:45','0:50','0:55'];
-const LABELS_3H = ['7:00','7:30','8:00','8:30','9:00','9:30','10:00','10:30','11:00','11:30','12:00','12:30'];
-const LABELS_6H = ['6:00','7:00','8:00','9:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+const LABELS_1H = [];
+const LABELS_2H = [];
+const LABELS_3H = [];
 
 let activeMetric = 'temp';
 let activeRango  = '1h';
 
 function getLabels(rango) {
   if (rango === '1h') return LABELS_1H;
-  if (rango === '3h') return LABELS_3H;
-  return LABELS_6H;
+  if (rango === '2h') return LABELS_2H;
+  return LABELS_3H;
 }
 
 function getData(metric, rango) {
   const ds = DATASETS[metric];
   if (rango === '1h') return ds.data1h;
-  if (rango === '3h') return ds.data3h;
-  return ds.data6h;
+  if (rango === '2h') return ds.data2h;
+  return ds.data3h;
 }
 
 
@@ -200,7 +200,7 @@ function roundRect(ctx, x, y, w, h, r) {
 
 function recalcAxis(metric) {
   const ds = DATASETS[metric];
-  const allData = [...ds.data1h, ...ds.data3h, ...ds.data6h]
+  const allData = [...ds.data1h, ...ds.data2h, ...ds.data3h]
     .map(Number).filter(v => !isNaN(v) && isFinite(v));
   if (allData.length === 0) return;
   const min = Math.min(...allData);
@@ -411,8 +411,8 @@ async function cargarHistorial() {
 
     // Filtrar entradas según el rango de tiempo y tomar las últimas muestras
     const entradas1h = todas.filter(e => e.timestamp >= ahora - 3600).slice(-12);
+    const entradas2h = todas.filter(e => e.timestamp >= ahora - 7200).slice(-24);
     const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-36);
-    const entradas6h = todas.filter(e => e.timestamp >= ahora - 21600).slice(-72);
 
     // Función auxiliar: sobreescribe los datos y etiquetas de cada rango
   function aplicar(entradas, sufijo, labelsArr) {
@@ -441,8 +441,8 @@ async function cargarHistorial() {
   }
 
     aplicar(entradas1h, '1h', LABELS_1H);
+    aplicar(entradas2h, '2h', LABELS_2H);
     aplicar(entradas3h, '3h', LABELS_3H);
-    aplicar(entradas6h, '6h', LABELS_6H);
 
     drawChart();
 
