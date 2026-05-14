@@ -411,8 +411,8 @@ async function cargarHistorial() {
 
     // Filtrar entradas según el rango de tiempo y tomar las últimas muestras
     const entradas1h = todas.filter(e => e.timestamp >= ahora - 3600).slice(-12);
-    const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-20);
-    const entradas6h = todas.filter(e => e.timestamp >= ahora - 21600).slice(-30);
+    const entradas3h = todas.filter(e => e.timestamp >= ahora - 10800).slice(-36);
+    const entradas6h = todas.filter(e => e.timestamp >= ahora - 21600).slice(-72);
 
     // Función auxiliar: sobreescribe los datos y etiquetas de cada rango
   function aplicar(entradas, sufijo, labelsArr) {
